@@ -23,11 +23,27 @@ SUMMARIES_DIR = STORAGE_DIR / "summaries"
 RECORDINGS_DIR.mkdir(parents=True, exist_ok=True)
 SUMMARIES_DIR.mkdir(parents=True, exist_ok=True)
 
-SYNC_API_KEY = os.environ.get("SYNC_API_KEY", "echominutes_secret_sync_key_2026")
-DASHBOARD_PASSWORD = os.environ.get("DASHBOARD_PASSWORD", "admin123")
-SECRET_KEY = os.environ.get("SECRET_KEY", "echominutes_super_secure_session_key_998877")
+def load_env_config() -> dict:
+    env_file = BASE_DIR / ".env"
+    config = {
+        "SYNC_API_KEY": "echominutes_secret_key",
+        "DASHBOARD_PASSWORD": "admin123",
+        "SECRET_KEY": "echominutes_super_secure_session_key_998877"
+    }
+    if env_file.exists():
+        try:
+            with open(env_file, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith("#") and "=" in line:
+                        k, v = line.split("=", 1)
+                        config[k.strip()] = v.strip().strip("'\"")
+        except Exception:
+            pass
+    return config
 
-serializer = URLSafeTimedSerializer(SECRET_KEY)
+initial_cfg = load_env_config()
+serializer = URLSafeTimedSerializer(initial_cfg.get("SECRET_KEY", "echominutes_super_secure_session_key_998877"))
 SESSION_COOKIE = "echominutes_session"
 SESSION_MAX_AGE = 30 * 24 * 3600  # 30 days
 
@@ -64,7 +80,10 @@ def verify_sync_key(authorization: Optional[str] = Header(None), x_sync_key: Opt
     elif x_sync_key:
         token = x_sync_key.strip()
     
-    if not token or token != SYNC_API_KEY:
+    cfg = load_env_config()
+    expected_key = cfg.get("SYNC_API_KEY", "echominutes_secret_key")
+    
+    if not token or token != expected_key:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or missing Sync API Key"
@@ -91,7 +110,9 @@ def login_page(request: Request):
 
 @app.post("/login", response_class=HTMLResponse)
 def login_submit(request: Request, password: str = Form(...)):
-    if password == DASHBOARD_PASSWORD:
+    cfg = load_env_config()
+    expected_password = cfg.get("DASHBOARD_PASSWORD", "admin123")
+    if password == expected_password:
         token = serializer.dumps({"authenticated": True})
         response = RedirectResponse(url="/dashboard", status_code=303)
         response.set_cookie(
