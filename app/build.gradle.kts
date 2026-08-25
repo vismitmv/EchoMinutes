@@ -89,6 +89,9 @@ dependencies {
   // Networking
   implementation(libs.okhttp)
 
+  // WorkManager
+  implementation(libs.androidx.work.runtime.ktx)
+
   // Serialization
   implementation(libs.kotlinx.serialization.json)
 

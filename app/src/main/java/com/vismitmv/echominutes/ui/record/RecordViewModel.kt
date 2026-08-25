@@ -118,10 +118,14 @@ class RecordViewModel(application: Application) : AndroidViewModel(application) 
                                 audioFilePath = file.absolutePath,
                                 transcript = geminiResult.transcript,
                                 summary = geminiResult.summary,
-                                durationSeconds = durationSeconds
+                                durationSeconds = durationSeconds,
+                                syncStatus = "PENDING"
                             )
                         )
                     }
+                    // Trigger background upload via WorkManager
+                    com.vismitmv.echominutes.sync.SyncWorker.enqueue(getApplication())
+
                     _uiState.value = _uiState.value.copy(
                         isProcessing = false,
                         navigateToResult = meetingId

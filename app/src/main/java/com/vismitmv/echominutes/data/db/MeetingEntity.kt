@@ -11,5 +11,7 @@ data class MeetingEntity(
     val transcript: String = "",
     val summary: String = "",
     val durationSeconds: Int = 0,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val syncStatus: String = "PENDING", // PENDING, SYNCED, FAILED, DISABLED
+    val syncedAt: Long? = null
 )

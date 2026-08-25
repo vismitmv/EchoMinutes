@@ -12,3 +12,14 @@ local.properties
 schemas
 *.apk
 *.aab
+
+# Backend
+backend/.env
+backend/.venv
+backend/__pycache__
+backend/storage/recordings/*
+!backend/storage/recordings/.gitkeep
+backend/storage/summaries/*
+!backend/storage/summaries/.gitkeep
+backend/storage/*.db
+backend/storage/*.db-journal

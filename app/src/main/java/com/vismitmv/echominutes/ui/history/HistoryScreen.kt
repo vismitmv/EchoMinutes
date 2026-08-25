@@ -5,12 +5,17 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CloudDone
+import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.MicNone
+import androidx.compose.material.icons.filled.SyncProblem
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -22,6 +27,10 @@ import com.vismitmv.echominutes.data.db.MeetingEntity
 fun HistoryScreen(onNavigateToResult: (Long) -> Unit) {
     val viewModel: HistoryViewModel = viewModel()
     val meetings by viewModel.meetings.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        viewModel.loadMeetings()
+    }
 
     Scaffold(
         topBar = {
@@ -98,12 +107,37 @@ private fun MeetingCard(meeting: MeetingEntity, onClick: () -> Unit) {
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                val durationStr = formatDuration(meeting.durationSeconds)
-                Text(
-                    text = durationStr,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    // Sync badge
+                    when (meeting.syncStatus) {
+                        "SYNCED" -> Icon(
+                            Icons.Default.CloudDone,
+                            contentDescription = "Synced to Cloud",
+                            tint = Color(0xFF10B981),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        "PENDING" -> Icon(
+                            Icons.Default.CloudUpload,
+                            contentDescription = "Sync Pending",
+                            tint = MaterialTheme.colorScheme.outline,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        "FAILED" -> Icon(
+                            Icons.Default.SyncProblem,
+                            contentDescription = "Sync Retry Pending",
+                            tint = Color(0xFFF59E0B),
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+
+                    val durationStr = formatDuration(meeting.durationSeconds)
+                    Text(
+                        text = durationStr,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
 
             if (meeting.summary.isNotBlank()) {

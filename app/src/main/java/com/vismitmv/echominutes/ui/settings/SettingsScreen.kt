@@ -5,10 +5,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Key
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,7 +23,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 fun SettingsScreen() {
     val viewModel: SettingsViewModel = viewModel()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    var showKey by remember { mutableStateOf(false) }
+    var showGeminiKey by remember { mutableStateOf(false) }
+    var showSyncKey by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.saved) {
         if (state.saved) {
@@ -51,20 +49,20 @@ fun SettingsScreen() {
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .padding(24.dp),
+                .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            // Icon + Heading
+            // ----------------- GEMINI API SECTION ----------------- //
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     Icons.Default.Key,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier.size(24.dp)
                 )
-                Spacer(Modifier.width(12.dp))
+                Spacer(Modifier.width(10.dp))
                 Text(
-                    "Gemini API Key",
+                    "Google Gemini API",
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -75,17 +73,11 @@ fun SettingsScreen() {
                     containerColor = MaterialTheme.colorScheme.surfaceVariant
                 )
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(modifier = Modifier.padding(14.dp)) {
                     Text(
-                        "Your API key is stored securely on this device using AES-256 encryption. It is never sent anywhere except directly to the Gemini API.",
+                        "Stored securely on-device with AES-256 GCM encryption. Used directly to transcribe & summarize audio with Gemini 3.6 Flash.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        "Get your free API key from Google AI Studio → aistudio.google.com",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
@@ -93,45 +85,142 @@ fun SettingsScreen() {
             OutlinedTextField(
                 value = state.apiKey,
                 onValueChange = viewModel::onApiKeyChanged,
-                label = { Text("API Key") },
+                label = { Text("Gemini API Key") },
                 placeholder = { Text("AIza…") },
                 singleLine = true,
-                visualTransformation = if (showKey) VisualTransformation.None else PasswordVisualTransformation(),
+                visualTransformation = if (showGeminiKey) VisualTransformation.None else PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password,
+                    imeAction = ImeAction.Next
+                ),
+                trailingIcon = {
+                    IconButton(onClick = { showGeminiKey = !showGeminiKey }) {
+                        Icon(
+                            if (showGeminiKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                            contentDescription = if (showGeminiKey) "Hide key" else "Show key"
+                        )
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+            // ----------------- CLOUDFLARE SYNC SECTION ----------------- //
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Default.CloudSync,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(Modifier.width(10.dp))
+                Text(
+                    "Self-Hosted Cloud Sync",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+            ) {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Text(
+                        "Automatically syncs audio files, transcripts, and summaries to your self-hosted backend exposed via Cloudflare Tunnel.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            OutlinedTextField(
+                value = state.serverUrl,
+                onValueChange = viewModel::onServerUrlChanged,
+                label = { Text("Cloudflare Server URL") },
+                placeholder = { Text("https://echominutes.vismitmv.com") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Uri,
+                    imeAction = ImeAction.Next
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            OutlinedTextField(
+                value = state.syncApiKey,
+                onValueChange = viewModel::onSyncApiKeyChanged,
+                label = { Text("Sync API Key") },
+                placeholder = { Text("Enter your backend sync key") },
+                singleLine = true,
+                visualTransformation = if (showSyncKey) VisualTransformation.None else PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password,
                     imeAction = ImeAction.Done
                 ),
                 trailingIcon = {
-                    IconButton(onClick = { showKey = !showKey }) {
+                    IconButton(onClick = { showSyncKey = !showSyncKey }) {
                         Icon(
-                            if (showKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                            contentDescription = if (showKey) "Hide key" else "Show key"
+                            if (showSyncKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                            contentDescription = if (showSyncKey) "Hide key" else "Show key"
                         )
                     }
                 },
-                modifier = Modifier.fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    focusedLabelColor = MaterialTheme.colorScheme.primary
-                )
+                modifier = Modifier.fillMaxWidth()
             )
 
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        "Auto-Sync Recordings",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        "Upload in background using WorkManager",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Switch(
+                    checked = state.autoSyncEnabled,
+                    onCheckedChange = viewModel::onAutoSyncToggled
+                )
+            }
+
+            // Sync Now button
+            OutlinedButton(
+                onClick = viewModel::syncNow,
+                enabled = !state.isSyncingNow && state.syncApiKey.isNotBlank(),
+                modifier = Modifier.fillMaxWidth().height(48.dp)
+            ) {
+                Icon(Icons.Default.Sync, contentDescription = null)
+                Spacer(Modifier.width(8.dp))
+                Text(if (state.isSyncingNow) "Sync Enqueued..." else "Sync Unsynced Meetings Now")
+            }
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+            // Save button
             Button(
-                onClick = viewModel::saveApiKey,
+                onClick = viewModel::saveAllSettings,
                 modifier = Modifier.fillMaxWidth().height(52.dp),
-                enabled = state.apiKey.isNotBlank(),
                 shape = MaterialTheme.shapes.medium
             ) {
                 if (state.saved) {
                     Icon(Icons.Default.CheckCircle, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
-                    Text("Saved!")
+                    Text("Settings Saved!")
                 } else {
-                    Text("Save API Key")
+                    Text("Save All Settings")
                 }
             }
-
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
             // About section
             Text(
@@ -140,12 +229,12 @@ fun SettingsScreen() {
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                "EchoMinutes uses the Gemini 3.6 Flash model to transcribe and summarize your meetings. Audio is processed directly from your device — no third-party servers involved.",
+                "EchoMinutes uses Gemini 3.6 Flash to transcribe and summarize meetings, with automatic background sync to your private Cloudflare backend.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                "Version 1.0 • com.vismitmv.echominutes",
+                "Version 1.1.0-beta • com.vismitmv.echominutes",
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.outline
             )

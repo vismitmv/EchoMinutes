@@ -16,6 +16,12 @@ interface MeetingDao {
     @Query("SELECT * FROM meetings WHERE id = :id")
     suspend fun getById(id: Long): MeetingEntity?
 
+    @Query("SELECT * FROM meetings WHERE syncStatus != 'SYNCED' ORDER BY createdAt ASC")
+    suspend fun getUnsyncedMeetings(): List<MeetingEntity>
+
+    @Query("UPDATE meetings SET syncStatus = :status, syncedAt = :syncedAt WHERE id = :id")
+    suspend fun updateSyncStatus(id: Long, status: String, syncedAt: Long?)
+
     @Query("DELETE FROM meetings WHERE id = :id")
     suspend fun deleteById(id: Long)
 }
